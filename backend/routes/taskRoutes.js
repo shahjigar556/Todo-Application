@@ -4,9 +4,23 @@ const Tasks=require('../models/taskSchema');
 
 router.get('/',async (req,res)=>{
     try {
+        const {status}=req.query;
+        if(status!=='all'){
+            const tasks=await Tasks.find({status});
+            res.json(tasks);
+        }
         const tasks=await Tasks.find({});
-        console.log('sending Tasks')
         res.json(tasks);
+    } catch (e) {
+        console.log(e.message);
+        res.status(500).send('Internal server error')
+    }
+})
+router.get('/:id',async (req,res)=>{
+    try {
+        const task=await Tasks.findById(req.params.id);
+        console.log('sending Tasks')
+        res.json(task);
         
     } catch (e) {
         console.log(e.message);
@@ -37,6 +51,10 @@ router.put('/:id',async (req,res)=>{
         const {text,description,status}=req.body;
         const task=await Tasks.findByIdAndUpdate(id,{text,description,status},{new:true})
         // add logic is status is completed
+        if(task.status=='completed'){
+            task.completed=true;
+        }
+        await task.save();
         res.json(task);
     } catch (e) {
         console.log(e.message)
